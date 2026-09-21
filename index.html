@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro de Monitoreo - Proyecto Terremoto</title>
-    <!-- Estilos estilo Galaxia / Moderno Oscuro -->
     <style>
         :root {
             --bg-deep: #0f0c1b;
@@ -64,7 +63,6 @@
             width: 100%;
         }
 
-        /* Visor de Pantalla - Estilo Monitor Espacial Interactivo */
         .visor-pantalla {
             background: #000;
             border-radius: 16px;
@@ -77,7 +75,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            cursor: pointer;
+            cursor: crosshair;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -86,7 +84,7 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            pointer-events: auto; /* Permite capturar clics directamente en la imagen */
+            pointer-events: auto;
         }
 
         .placeholder-stream {
@@ -98,7 +96,6 @@
             pointer-events: none;
         }
 
-        /* Panel de Control Lateral Galáctico */
         .panel-control {
             background: var(--bg-panel);
             backdrop-filter: blur(10px);
@@ -138,30 +135,10 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-actualizar { 
-            background: linear-gradient(135deg, #6c5ce7, #8575e7); 
-        }
-        .btn-actualizar:hover { 
-            box-shadow: 0 6px 18px rgba(108, 92, 231, 0.4); 
-        }
-        
-        .btn-bloquear { 
-            background: linear-gradient(135deg, #e17055, #d63031); 
-        }
-        .btn-bloquear:hover { 
-            box-shadow: 0 6px 18px rgba(225, 112, 85, 0.4); 
-        }
-        
-        .btn-alerta { 
-            background: linear-gradient(135deg, #d63031, #ff7675); 
-        }
-        .btn-alerta:hover { 
-            box-shadow: 0 6px 18px rgba(214, 48, 49, 0.4); 
-        }
+        .btn:active { transform: scale(0.97); }
+        .btn-actualizar { background: linear-gradient(135deg, #6c5ce7, #8575e7); }
+        .btn-bloquear { background: linear-gradient(135deg, #e17055, #d63031); }
+        .btn-alerta { background: linear-gradient(135deg, #d63031, #ff7675); }
     </style>
 </head>
 <body>
@@ -172,14 +149,11 @@
     </header>
 
     <div class="contenedor-principal">
-        <!-- Visor de Pantalla -->
         <div class="visor-pantalla" id="visorContainer">
             <div class="placeholder-stream">Esperando transmisión de fotogramas del dispositivo...</div>
-            <!-- Se añadió draggable="false" para evitar que el navegador mueva la foto -->
             <img id="imagenStream" alt="" draggable="false" />
         </div>
 
-        <!-- Panel de Control Remoto -->
         <div class="panel-control">
             <h3>Centro de Mandos</h3>
             <button class="btn btn-actualizar" onclick="enviarComando('actualizar')">🔄 Actualizar App</button>
@@ -188,16 +162,16 @@
         </div>
     </div>
 
-    <!-- Importar Socket.io del lado del cliente apuntando explícitamente a Render -->
     <script src="https://servidorterremoto.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        // Conexión explícita al servidor en Render
         const socket = io("https://servidorterremoto.onrender.com");
-
         const estadoDiv = document.getElementById('estado');
         const imagenStream = document.getElementById('imagenStream');
-        const visorContainer = document.getElementById('visorContainer');
         const placeholder = document.querySelector('.placeholder-stream');
+
+        let isMouseDown = false;
+        let startX = 0;
+        let startY = 0;
 
         socket.on('connect', () => {
             estadoDiv.innerText = '🌌 Conectado al Servidor Galáctico (En línea)';
@@ -211,15 +185,12 @@
             estadoDiv.style.borderColor = 'rgba(255, 71, 87, 0.3)';
         });
 
-        // Recepción del fotograma enviado por el celular
         socket.on('frame-pantalla', (data) => {
             try {
                 if (placeholder.style.display !== 'none') {
                     placeholder.style.display = 'none';
                 }
-
                 const base64Data = (typeof data === 'object' && data !== null) ? data.frame : data;
-
                 if (base64Data) {
                     imagenStream.src = 'data:image/jpeg;base64,' + base64Data;
                 }
@@ -228,23 +199,47 @@
             }
         });
 
-        // Evitar que el navegador intente arrastrar la imagen por defecto
         imagenStream.addEventListener('dragstart', (e) => e.preventDefault());
 
-        // Capturar el clic sobre la transmisión para enviarlo como coordenadas táctiles
-        imagenStream.addEventListener('click', (event) => {
+        // Registrar inicio del toque/clic
+        imagenStream.addEventListener('mousedown', (event) => {
+            isMouseDown = true;
             const rect = imagenStream.getBoundingClientRect();
-            
-            // Coordenadas relativas (0.0 a 1.0) respecto al tamaño visual de la imagen
-            const xRelativa = (event.clientX - rect.left) / rect.width;
-            const yRelativa = (event.clientY - rect.top) / rect.height;
+            startX = (event.clientX - rect.left) / rect.width;
+            startY = (event.clientY - rect.top) / rect.height;
+        });
 
-            if (xRelativa >= 0 && xRelativa <= 1 && yRelativa >= 0 && yRelativa <= 1) {
-                console.log(`Enviando toque táctil: X=${xRelativa.toFixed(3)}, Y=${yRelativa.toFixed(3)}`);
-                
+        // Registrar fin del toque/clic o deslizamiento
+        imagenStream.addEventListener('mouseup', (event) => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+
+            const rect = imagenStream.getBoundingClientRect();
+            const endX = (event.clientX - rect.left) / rect.width;
+            const endY = (event.clientY - rect.top) / rect.height;
+
+            // Calcular la distancia del movimiento
+            const distancia = Math.hypot(endX - startX, endY - startY);
+
+            if (distancia < 0.02) {
+                // Si se movió muy poco, se considera un CLIC simple
+                console.log(`Enviando Clic: X=${startX.toFixed(3)}, Y=${startY.toFixed(3)}`);
                 socket.emit('control-tactil', {
-                    x: xRelativa,
-                    y: yRelativa
+                    tipo: 'click',
+                    startX: startX,
+                    startY: startY,
+                    endX: startX,
+                    endY: startY
+                });
+            } else {
+                // Si se movió lo suficiente, se considera un DESLIZAMIENTO (Swipe)
+                console.log(`Enviando Swipe de (${startX.toFixed(3)}, ${startY.toFixed(3)}) a (${endX.toFixed(3)}, ${endY.toFixed(3)})`);
+                socket.emit('control-tactil', {
+                    tipo: 'swipe',
+                    startX: startX,
+                    startY: startY,
+                    endX: endX,
+                    endY: endY
                 });
             }
         });
