@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 
-// 1. Esto le dice a Express que sirva los archivos estáticos (como tu index.html)
+// Esto le dice a Express que sirva los archivos estáticos (como tu index.html)
 app.use(express.static(__dirname));
 
 const server = http.createServer(app);
@@ -17,7 +17,7 @@ const io = new Server(server, {
   }
 });
 
-// 2. Ruta principal que ahora carga tu index.html en lugar de un texto plano
+// Ruta principal que carga tu index.html
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
@@ -28,7 +28,6 @@ io.on('connection', (socket) => {
 
   // Escuchar cuando el celular mande el fotograma de la pantalla y reenviarlo a la web
   socket.on('frame-pantalla', (bytesImagen) => {
-    // Reenvía la imagen a todos los conectados (como tu navegador web)
     socket.broadcast.emit('frame-pantalla', bytesImagen);
   });
 
@@ -36,6 +35,12 @@ io.on('connection', (socket) => {
   socket.on('comando-remoto', (data) => {
     console.log('Comando remoto recibido:', data);
     socket.broadcast.emit('comando-remoto', data);
+  });
+
+  // NUEVO: Escuchar clics/toques desde la web para reenviarlos al celular
+  socket.on('control-tactil', (data) => {
+    console.log('Comando táctil recibido desde la web:', data);
+    socket.broadcast.emit('control-tactil', data);
   });
 
   socket.on('disconnect', () => {
