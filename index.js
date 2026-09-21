@@ -6,6 +6,9 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 
+// 1. Esto le dice a Express que sirva los archivos estáticos (como tu index.html)
+app.use(express.static(__dirname));
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -14,25 +17,25 @@ const io = new Server(server, {
   }
 });
 
-// Ruta de prueba para saber si el servidor responde
+// 2. Ruta principal que ahora carga tu index.html en lugar de un texto plano
 app.get('/', (req, res) => {
-  res.send('Servidor de control de pantalla activo 🚀');
+  res.sendFile(__dirname + '/index.html');
 });
 
-// Cuando alguien se conecta al servidor
+// Cuando alguien se conecta al servidor (ya sea la app o la web)
 io.on('connection', (socket) => {
   console.log(`Un cliente se ha conectado: ${socket.id}`);
 
-  // Escuchar cuando el celular mande señal de iniciar transmisión
-  socket.on('iniciar-transmision', (data) => {
-    console.log('Señal de transmisión recibida desde el celular');
-    socket.broadcast.emit('transmitir-pantalla', data);
+  // Escuchar cuando el celular mande el fotograma de la pantalla y reenviarlo a la web
+  socket.on('frame-pantalla', (bytesImagen) => {
+    // Reenvía la imagen a todos los conectados (como tu navegador web)
+    socket.broadcast.emit('frame-pantalla', bytesImagen);
   });
 
-  // Escuchar cuando muevas algo en el servidor web para enviarlo al celular
-  socket.on('mover-pantalla', (coordenadas) => {
-    console.log('Coordenadas recibidas:', coordenadas);
-    socket.broadcast.emit('ejecutar-toque', coordenadas);
+  // Escuchar cuando des clic en los botones del panel web para enviarlo al celular
+  socket.on('comando-remoto', (data) => {
+    console.log('Comando remoto recibido:', data);
+    socket.broadcast.emit('comando-remoto', data);
   });
 
   socket.on('disconnect', () => {
