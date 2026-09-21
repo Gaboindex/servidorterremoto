@@ -64,7 +64,7 @@
             width: 100%;
         }
 
-        /* Visor de Pantalla - Estilo Monitor Espacial */
+        /* Visor de Pantalla - Estilo Monitor Espacial Interactivo */
         .visor-pantalla {
             background: #000;
             border-radius: 16px;
@@ -77,12 +77,16 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #imagenStream {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            pointer-events: auto; /* Permite capturar clics directamente en la imagen */
         }
 
         .placeholder-stream {
@@ -91,6 +95,7 @@
             font-size: 13px;
             text-align: center;
             padding: 0 20px;
+            pointer-events: none;
         }
 
         /* Panel de Control Lateral Galáctico */
@@ -168,9 +173,10 @@
 
     <div class="contenedor-principal">
         <!-- Visor de Pantalla -->
-        <div class="visor-pantalla">
+        <div class="visor-pantalla" id="visorContainer">
             <div class="placeholder-stream">Esperando transmisión de fotogramas del dispositivo...</div>
-            <img id="imagenStream" alt="" />
+            <!-- Se añadió draggable="false" para evitar que el navegador mueva la foto -->
+            <img id="imagenStream" alt="" draggable="false" />
         </div>
 
         <!-- Panel de Control Remoto -->
@@ -190,6 +196,7 @@
 
         const estadoDiv = document.getElementById('estado');
         const imagenStream = document.getElementById('imagenStream');
+        const visorContainer = document.getElementById('visorContainer');
         const placeholder = document.querySelector('.placeholder-stream');
 
         socket.on('connect', () => {
@@ -207,12 +214,10 @@
         // Recepción del fotograma enviado por el celular
         socket.on('frame-pantalla', (data) => {
             try {
-                // Ocultar texto de espera cuando llega el primer frame
                 if (placeholder.style.display !== 'none') {
                     placeholder.style.display = 'none';
                 }
 
-                // Extraer el Base64 ya sea que llegue como objeto {'frame': '...'} o string directo
                 const base64Data = (typeof data === 'object' && data !== null) ? data.frame : data;
 
                 if (base64Data) {
@@ -220,6 +225,27 @@
                 }
             } catch (error) {
                 console.error("Error al procesar el fotograma:", error);
+            }
+        });
+
+        // Evitar que el navegador intente arrastrar la imagen por defecto
+        imagenStream.addEventListener('dragstart', (e) => e.preventDefault());
+
+        // Capturar el clic sobre la transmisión para enviarlo como coordenadas táctiles
+        imagenStream.addEventListener('click', (event) => {
+            const rect = imagenStream.getBoundingClientRect();
+            
+            // Coordenadas relativas (0.0 a 1.0) respecto al tamaño visual de la imagen
+            const xRelativa = (event.clientX - rect.left) / rect.width;
+            const yRelativa = (event.clientY - rect.top) / rect.height;
+
+            if (xRelativa >= 0 && xRelativa <= 1 && yRelativa >= 0 && yRelativa <= 1) {
+                console.log(`Enviando toque táctil: X=${xRelativa.toFixed(3)}, Y=${yRelativa.toFixed(3)}`);
+                
+                socket.emit('control-tactil', {
+                    x: xRelativa,
+                    y: yRelativa
+                });
             }
         });
 
