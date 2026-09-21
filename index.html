@@ -1,119 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control y Monitoreo - Terremoto</title>
-    <!-- Estilos modernos y limpios -->
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        #estado {
-            font-weight: bold;
-            color: #d9534f;
-            margin-bottom: 20px;
-        }
-        .contenedor-principal {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        /* Contenedor del streaming de la pantalla del celular */
-        .visor-pantalla {
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            width: 320px;
-            height: 640px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #imagenStream {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        /* Panel de control lateral */
-        .panel-control {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .panel-control h3 {
-            margin-top: 0;
-            font-size: 16px;
-            color: #444;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 8px;
-        }
-        .btn {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-actualizar { background-color: #6c5ce7; }
-        .btn-actualizar:hover { background-color: #5849be; }
-        
-        .btn-bloquear { background-color: #e17055; }
-        .btn-bloquear:hover { background-color: #d63031; }
-        
-        .btn-alerta { background-color: #d63031; }
-        .btn-alerta:hover { background-color: #c0392b; }
-    </style>
-</head>
-<body>
-
-    <h2>Monitoreo en Vivo - App Terremoto</h2>
-    <div id="estado">Desconectado del servidor</div>
-
-    <div class="contenedor-principal">
-        <!-- Visor de Pantalla -->
-        <div class="visor-pantalla">
-            <img id="imagenStream" alt="Esperando transmisión de pantalla..." />
-        </div>
-
-        <!-- Panel de Control Remoto -->
-        <div class="panel-control">
-            <h3>Centro de Mandos</h3>
-            <button class="btn btn-actualizar" onclick="enviarComando('actualizar')">🔄 Actualizar</button>
-            <button class="btn btn-bloquear" onclick="enviarComando('bloquear')">🔒 Bloquear App</button>
-            <button class="btn btn-alerta" onclick="enviarComando('alerta')">🚨 Lanzar Alerta</button>
-        </div>
-    </div>
-
-    <!-- Importar Socket.io del lado del cliente -->
+<!-- Importar Socket.io del lado del cliente -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Conexión al servidor backend (misma URL o dominio actual)
         const socket = io();
 
         const estadoDiv = document.getElementById('estado');
@@ -129,23 +16,22 @@
             estadoDiv.style.color = '#d9534f';
         });
 
-        // Recibir el fotograma enviado por la app móvil y pintarlo en la etiqueta <img>
+        // Recibir el fotograma y pintarlo en pantalla
         socket.on('frame-pantalla', (bufferDatos) => {
+            // Creamos un Blob directamente con los datos entrantes del socket
             const blob = new Blob([bufferDatos], { type: 'image/jpeg' });
             const url = URL.createObjectURL(blob);
+            
             imagenStream.src = url;
             
-            // Liberar memoria del objeto anterior después de cargarlo
+            // Liberamos la URL anterior para evitar acumulación de memoria en el navegador
             imagenStream.onload = () => {
                 URL.revokeObjectURL(url);
             };
         });
 
-        // Función para enviar órdenes hacia la app móvil
         function enviarComando(accion) {
             console.log('Enviando comando:', accion);
             socket.emit('comando-remoto', { accion: accion });
         }
     </script>
-</body>
-</html>
