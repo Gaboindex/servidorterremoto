@@ -3,135 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control y Monitoreo - Terremoto</title>
-    <!-- Estilos modernos y limpios -->
+    <title>Centro de Monitoreo - Proyecto Terremoto</title>
+    <!-- Estilos estilo Galaxia / Moderno Oscuro -->
     <style>
+        :root {
+            --bg-deep: #0f0c1b;
+            --bg-panel: rgba(30, 24, 54, 0.7);
+            --accent-purple: #6c5ce7;
+            --accent-glow: #a29bfe;
+            --accent-pink: #fd79a8;
+            --text-main: #f1f2f6;
+            --text-muted: #a4b0be;
+            --success: #2ed573;
+            --danger: #ff4757;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
+            background: linear-gradient(135deg, #0f0c1b 0%, #1b143f 50%, #2c1654 100%);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
         h2 {
-            color: #333;
-            margin-bottom: 10px;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, var(--accent-glow), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+
         #estado {
-            font-weight: bold;
-            color: #d9534f;
-            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: inline-block;
         }
+
         .contenedor-principal {
             display: flex;
             gap: 30px;
             flex-wrap: wrap;
             justify-content: center;
             align-items: flex-start;
+            max-width: 1000px;
+            width: 100%;
         }
-        /* Contenedor del streaming de la pantalla del celular */
+
+        /* Visor de Pantalla - Estilo Monitor Espacial */
         .visor-pantalla {
             background: #000;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.2);
+            border: 2px solid rgba(162, 155, 254, 0.2);
             width: 320px;
             height: 640px;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
+
         #imagenStream {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
         }
-        /* Panel de control lateral */
+
+        .placeholder-stream {
+            position: absolute;
+            color: var(--text-muted);
+            font-size: 13px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        /* Panel de Control Lateral Galáctico */
         .panel-control {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            width: 250px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 280px;
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         .panel-control h3 {
-            margin-top: 0;
-            font-size: 16px;
-            color: #444;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 8px;
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-glow);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
         }
+
         .btn {
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .btn-actualizar { background-color: #6c5ce7; }
-        .btn-actualizar:hover { background-color: #5849be; }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-actualizar { 
+            background: linear-gradient(135deg, #6c5ce7, #8575e7); 
+        }
+        .btn-actualizar:hover { 
+            box-shadow: 0 6px 18px rgba(108, 92, 231, 0.4); 
+        }
         
-        .btn-bloquear { background-color: #e17055; }
-        .btn-bloquear:hover { background-color: #d63031; }
+        .btn-bloquear { 
+            background: linear-gradient(135deg, #e17055, #d63031); 
+        }
+        .btn-bloquear:hover { 
+            box-shadow: 0 6px 18px rgba(225, 112, 85, 0.4); 
+        }
         
-        .btn-alerta { background-color: #d63031; }
-        .btn-alerta:hover { background-color: #c0392b; }
+        .btn-alerta { 
+            background: linear-gradient(135deg, #d63031, #ff7675); 
+        }
+        .btn-alerta:hover { 
+            box-shadow: 0 6px 18px rgba(214, 48, 49, 0.4); 
+        }
     </style>
 </head>
 <body>
 
-    <h2>Monitoreo en Vivo - App Terremoto</h2>
-    <div id="estado">Desconectado del servidor</div>
+    <header>
+        <h2>Monitoreo Galáctico - App Terremoto</h2>
+        <div id="estado">Iniciando conexión con el servidor...</div>
+    </header>
 
     <div class="contenedor-principal">
         <!-- Visor de Pantalla -->
         <div class="visor-pantalla">
-            <img id="imagenStream" alt="Esperando transmisión de pantalla..." />
+            <div class="placeholder-stream">Esperando transmisión de fotogramas del dispositivo...</div>
+            <img id="imagenStream" alt="" />
         </div>
 
         <!-- Panel de Control Remoto -->
         <div class="panel-control">
             <h3>Centro de Mandos</h3>
-            <button class="btn btn-actualizar" onclick="enviarComando('actualizar')">🔄 Actualizar</button>
-            <button class="btn btn-bloquear" onclick="enviarComando('bloquear')">🔒 Bloquear App</button>
+            <button class="btn btn-actualizar" onclick="enviarComando('actualizar')">🔄 Actualizar App</button>
+            <button class="btn btn-bloquear" onclick="enviarComando('bloquear')">🔒 Bloquear Pantalla</button>
             <button class="btn btn-alerta" onclick="enviarComando('alerta')">🚨 Lanzar Alerta</button>
         </div>
     </div>
 
-    <!-- Importar Socket.io del lado del cliente -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Importar Socket.io del lado del cliente apuntando explícitamente a Render -->
+    <script src="https://servidorterremoto.onrender.com/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // Conexión explícita al servidor en Render
+        const socket = io("https://servidorterremoto.onrender.com");
 
         const estadoDiv = document.getElementById('estado');
         const imagenStream = document.getElementById('imagenStream');
+        const placeholder = document.querySelector('.placeholder-stream');
 
         socket.on('connect', () => {
-            estadoDiv.innerText = 'Conectado al servidor (Monitoreando)';
-            estadoDiv.style.color = '#27ae60';
+            estadoDiv.innerText = '🌌 Conectado al Servidor Galáctico (En línea)';
+            estadoDiv.style.color = 'var(--success)';
+            estadoDiv.style.borderColor = 'rgba(46, 213, 115, 0.3)';
         });
 
         socket.on('disconnect', () => {
-            estadoDiv.innerText = 'Desconectado del servidor';
-            estadoDiv.style.color = '#d9534f';
+            estadoDiv.innerText = '⚠️ Desconectado del Servidor';
+            estadoDiv.style.color = 'var(--danger)';
+            estadoDiv.style.borderColor = 'rgba(255, 71, 87, 0.3)';
         });
 
-        // Recepción segura del fotograma para evitar bloqueos en blanco
+        // Recepción del fotograma enviado por el celular
         socket.on('frame-pantalla', (bufferDatos) => {
             try {
-                // Aseguramos que los datos se traten como Uint8Array de forma segura
+                // Ocultar texto de espera cuando llega el primer frame
+                if (placeholder.style.display !== 'none') {
+                    placeholder.style.display = 'none';
+                }
+
                 const byteArray = new Uint8Array(bufferDatos);
                 const blob = new Blob([byteArray], { type: 'image/jpeg' });
                 const url = URL.createObjectURL(blob);
