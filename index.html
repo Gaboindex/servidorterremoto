@@ -204,23 +204,16 @@
             estadoDiv.style.borderColor = 'rgba(255, 71, 87, 0.3)';
         });
 
-        // Recepción del fotograma enviado por el celular
-        socket.on('frame-pantalla', (bufferDatos) => {
+        // Recepción del fotograma enviado por el celular (llega como texto Base64)
+        socket.on('frame-pantalla', (base64Frame) => {
             try {
                 // Ocultar texto de espera cuando llega el primer frame
                 if (placeholder.style.display !== 'none') {
                     placeholder.style.display = 'none';
                 }
 
-                const byteArray = new Uint8Array(bufferDatos);
-                const blob = new Blob([byteArray], { type: 'image/jpeg' });
-                const url = URL.createObjectURL(blob);
-                
-                imagenStream.src = url;
-                
-                imagenStream.onload = () => {
-                    URL.revokeObjectURL(url);
-                };
+                // Asignar directamente el Base64 como fuente de la imagen JPEG
+                imagenStream.src = 'data:image/jpeg;base64,' + base64Frame;
             } catch (error) {
                 console.error("Error al procesar el fotograma:", error);
             }
